@@ -1,0 +1,9 @@
+{
+  "name": "BirdieView Pro",
+  "short_name": "BirdieView",
+  "description": "Avancerad golfanalys-app fokuserad på shot-by-shot-loggning",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#102820",
+  "theme_color": "#4C6444"
+}

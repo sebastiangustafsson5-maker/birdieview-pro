@@ -7,6 +7,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "BirdieView Pro",
   description: "Avancerad golfanalys-app fokuserad på shot-by-shot-loggning",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "BirdieView",
+  },
 };
 
 export const viewport: Viewport = {
