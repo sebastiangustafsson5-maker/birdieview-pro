@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(tempFilePath, buffer);
 
     // 2. Upload the file to Gemini via File API
-    const uploadResult = await ai.files.upload({ file: tempFilePath, mimeType: "video/mp4" });
+    const uploadResult = await ai.files.upload({ file: tempFilePath, config: { mimeType: "video/mp4" } });
     
     // 3. Wait for Google's video processing
     let fileState = await ai.files.get({ name: uploadResult.name });
