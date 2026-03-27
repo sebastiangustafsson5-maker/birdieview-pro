@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     const uploadResult = await ai.files.upload({ file: tempFilePath, config: { mimeType: "video/mp4" } });
     
     // 3. Wait for Google's video processing
-    let fileState = await ai.files.get({ name: uploadResult.name });
+    let fileState = await ai.files.get({ name: uploadResult.name! });
     while (fileState.state === 'PROCESSING') {
       await new Promise(r => setTimeout(r, 2000));
-      fileState = await ai.files.get({ name: uploadResult.name });
+      fileState = await ai.files.get({ name: uploadResult.name! });
     }
     
     if (fileState.state === 'FAILED') {
