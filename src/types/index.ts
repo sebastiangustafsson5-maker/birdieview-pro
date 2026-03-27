@@ -93,5 +93,6 @@ export interface SwingAnalysis {
   uid: string;
   videoUrl: string;
   analysis: string;
+  club: string;
   date: { seconds: number; nanoseconds: number } | any;
 }

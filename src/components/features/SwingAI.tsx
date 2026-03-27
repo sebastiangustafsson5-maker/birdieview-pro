@@ -12,6 +12,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedClub, setSelectedClub] = useState<string>('Driver');
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -72,7 +73,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
       const res = await fetch('/api/analyze-swing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl, stats })
+        body: JSON.stringify({ videoUrl, stats, club: selectedClub })
       });
       
       const data = await res.json();
@@ -82,6 +83,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
         uid: auth.currentUser.uid,
         videoUrl,
         analysis: data.analysis,
+        club: selectedClub,
         date: new Date()
       });
 
@@ -125,16 +127,31 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
         ) : (
           <div className="w-full space-y-3">
              <div className="space-y-1">
-               <h3 className="text-sm font-bold text-golf-beige tracking-tight">Skapa ny analys</h3>
-               <p className="text-[10px] text-golf-beige/60 max-w-[250px] mx-auto">Välj en film (max 20MB). AI:n kommer automatiskt att koppla bilden till dina registrerade missar från dina ronder.</p>
+               <h3 className="text-sm font-bold text-golf-beige tracking-tight">Vilken klubba slår du med?</h3>
+               <p className="text-[10px] text-golf-beige/60 max-w-[250px] mx-auto mb-2">Välj klubba så AI:n kan granska svingen mot dina riktiga fel-träffar för just den klubbtypen.</p>
              </div>
+             
+             <div className="flex justify-center mb-3">
+               <select 
+                 value={selectedClub}
+                 onChange={e => setSelectedClub(e.target.value)}
+                 className="bg-black/40 text-golf-beige border border-white/10 rounded-lg px-4 py-2 text-xs font-bold outline-none focus:ring-1 focus:ring-golf-beige/30 appearance-none text-center"
+               >
+                 <option value="Driver">Driver</option>
+                 <option value="Fairwaywood">Fairwaywood / Hybrid</option>
+                 <option value="Järn">Järnklubba (Inspel)</option>
+                 <option value="Wedge (Inspelen)">Wedge (Närspel/Kort)</option>
+               </select>
+             </div>
+
              <div>
                <label className="inline-flex items-center gap-2 bg-golf-beige text-golf-dark hover:bg-golf-beige/90 px-6 py-2.5 rounded-xl font-black text-xs cursor-pointer active:scale-95 transition-all shadow-xl">
                  <UploadCloud className="w-4 h-4" />
-                 Välj Video / Filma
+                 Filma Sving / Ladda Upp
                  <input type="file" accept="video/mp4,video/quicktime,video/webm" className="hidden" onChange={handleFileUpload} />
                </label>
              </div>
+             <p className="text-[8px] text-golf-beige/40">Max 20 MB (.mp4, .mov)</p>
           </div>
         )}
       </Card>
@@ -156,7 +173,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
               </div>
               <div className="p-4 space-y-3">
                 <div className="text-[9px] font-bold text-golf-beige/40 uppercase tracking-widest inline-flex bg-white/5 px-2 py-1 rounded-md">
-                  Analys från {swing.date?.seconds ? new Date(swing.date.seconds * 1000).toLocaleDateString() : 'Okänt datum'}
+                  Analys ({swing.club || 'Okänd klubba'}) från {swing.date?.seconds ? new Date(swing.date.seconds * 1000).toLocaleDateString() : 'Okänt datum'}
                 </div>
                 <div className="text-xs text-golf-beige/90 leading-relaxed whitespace-pre-wrap font-medium">
                   {swing.analysis.replace(/\*/g, '') /* Simple cleanup of markdown bolding if we don't use a library */}

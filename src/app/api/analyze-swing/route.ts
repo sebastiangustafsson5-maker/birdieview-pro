@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { videoUrl, stats } = await req.json();
+    const { videoUrl, stats, club } = await req.json();
     if (!videoUrl) return NextResponse.json({ error: 'No videoUrl provided' }, { status: 400 });
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -39,14 +39,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Video processing failed in Gemini' }, { status: 500 });
     }
 
-    // 4. Build prompt using the user's hard birdiview statistics
-    const prompt = `Du är BirdieView Pro's inbyggda AI Swing Coach, en världsledande golfinstruktör.
-Här är en uppladdad video på min golfsving.
+    // 4. Build prompt using the user's hard birdieview statistics filtered by club
+    let statsContext = '';
+    if (club === 'Driver' || club === 'Fairwaywood') {
+      statsContext = `- Träffsäkerhet: ${stats.fairwayAccuracy.toFixed(0)}% Fairwayträffar.\n- Utslags-missar generellt: ${stats.missLeftRate.toFixed(0)}% missas vänster, ${stats.missRightRate.toFixed(0)}% missas höger.`;
+    } else if (club === 'Wedge (Inspelen)') {
+      statsContext = `- Greenträffar (GIR): ${stats.girRate.toFixed(0)}%.\n- Inspelsmissar inom 100m tenderar att bli ${stats.approachMissShortRate.toFixed(0)}% korta.\n- Scrambling (Rädda Par): ${stats.totalScrambling.toFixed(0)}%.`;
+    } else {
+      statsContext = `- Greenträffar (GIR): ${stats.girRate.toFixed(0)}%.\n- Järnmissar: ${stats.approachMissLeftRate.toFixed(0)}% vänster, ${stats.approachMissRightRate.toFixed(0)}% höger.\n- Bollträff: Tenderar att slå ${stats.approachDuffRate.toFixed(0)}% duffar och ${stats.approachTopRate.toFixed(0)}% toppar.`;
+    }
 
-Samtidigt säger min historiska BirdieView-data följande om mina missar på banan just nu:
-- Driver: ${stats.missLeftRate > stats.missRightRate ? 'Missar mest vänster (' + stats.missLeftRate.toFixed(0) + '%)' : 'Missar mest höger (' + stats.missRightRate.toFixed(0) + '%)'}.
-- Järnslag: ${stats.approachMissLeftRate.toFixed(0)}% missas vänster, ${stats.approachMissRightRate.toFixed(0)}% höger, ${stats.approachMissShortRate.toFixed(0)}% kort.
-- Bollträff: ${stats.approachDuffRate.toFixed(0)}% duffar och ${stats.approachTopRate.toFixed(0)}% toppar.
+    const prompt = `Du är BirdieView Pro's inbyggda AI Swing Coach, en världsledande golfinstruktör.
+Här är en uppladdad video på min golfsving med en ${club}.
+
+Samtidigt säger min historiska spårade BirdieView-data följande om mina missar på banan med just denna typ av klubba:
+${statsContext}
 
 Baserat på min sving i videon OCH min hårda data ovan, vad gör jag rent tekniskt fel i svingen som orsakar mina vanligaste problem och missar? 
 Ge mig 3 konkreta, hands-on tekniktips för att reparera dessa exakta problem. Håll tonen uppmuntrande, modern, pedagogisk och rimligt kortfattad. Formatera ditt utfall snyggt med punkter.`;
