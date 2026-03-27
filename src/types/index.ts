@@ -87,3 +87,11 @@ export interface Stats {
   puttsPerGreen: number;
   avgPar: number;
 }
+
+export interface SwingAnalysis {
+  id?: string;
+  uid: string;
+  videoUrl: string;
+  analysis: string;
+  date: { seconds: number; nanoseconds: number } | any;
+}

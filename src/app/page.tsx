@@ -12,7 +12,8 @@ import {
   Flag, 
   CircleDot, 
   Menu, 
-  X 
+  X,
+  Video
 } from 'lucide-react';
 
 import { auth, db, doc, getDoc, collection, query, where, orderBy, onSnapshot, updateDoc } from '@/lib/firebase';
@@ -28,13 +29,14 @@ import { ShortGame } from '@/components/features/ShortGame';
 import { Putting } from '@/components/features/Putting';
 import { RoundEntry } from '@/components/features/RoundEntry';
 import { Profile } from '@/components/features/Profile';
+import { SwingAI } from '@/components/features/SwingAI';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [rounds, setRounds] = useState<GolfRound[]>([]);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'entry' | 'profile' | 'tee' | 'approach' | 'short' | 'putt'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'entry' | 'profile' | 'tee' | 'approach' | 'short' | 'putt' | 'swing'>('dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState('all');
 
@@ -355,6 +357,7 @@ export default function App() {
     { id: 'approach', label: 'Inspel' },
     { id: 'short', label: 'Närspel' },
     { id: 'putt', label: 'Puttning' },
+    { id: 'swing', label: 'Swing AI' },
   ] as const;
 
   return (
@@ -378,6 +381,7 @@ export default function App() {
             {item.id === 'approach' && <Crosshair className="w-6 h-6" />}
             {item.id === 'short' && <Flag className="w-6 h-6" />}
             {item.id === 'putt' && <CircleDot className="w-6 h-6" />}
+            {item.id === 'swing' && <Video className="w-6 h-6" />}
           </button>
         ))}
         <div className="h-px w-8 bg-white/5" />
@@ -435,6 +439,7 @@ export default function App() {
           {activeTab === 'approach' && <motion.div key="approach" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><ApproachShots stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
           {activeTab === 'short' && <motion.div key="short" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><ShortGame stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
           {activeTab === 'putt' && <motion.div key="putt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><Putting stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
+          {activeTab === 'swing' && <motion.div key="swing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><SwingAI stats={stats} /></motion.div>}
           {activeTab === 'entry' && <motion.div key="entry" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><RoundEntry profile={profile} onComplete={() => setActiveTab('dashboard')} /></motion.div>}
           {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><Profile profile={profile} onUpdate={setProfile} /></motion.div>}
         </AnimatePresence>
