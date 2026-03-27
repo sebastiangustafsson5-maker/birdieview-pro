@@ -31,8 +31,8 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
     if (!e.target.files || e.target.files.length === 0 || !auth.currentUser) return;
     const file = e.target.files[0];
     
-    if (file.size > 20 * 1024 * 1024) {
-      alert("Filen är för stor. Max 20 MB tillåts just nu.");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Filen är för stor. Max 50 MB tillåts just nu.");
       return;
     }
 
@@ -128,8 +128,8 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
           <div className="w-full space-y-3">
              <div className="space-y-1">
                <h3 className="text-sm font-bold text-golf-beige tracking-tight">Vilken klubba slår du med?</h3>
-               <p className="text-[10px] text-golf-beige/60 max-w-[250px] mx-auto mb-2">Välj klubba så AI:n kan granska svingen mot dina riktiga fel-träffar för just den klubbtypen.</p>
-             </div>
+               <p className="text-[10px] text-golf-beige/60 max-w-[250px] mx-auto mb-2">Välj en film (max 50MB). AI:n kommer granska svingen mot dina riktiga fel-träffar för just den klubbtypen.</p>
+           </div>
              
              <div className="flex justify-center mb-3">
                <select 
@@ -151,7 +151,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
                  <input type="file" accept="video/mp4,video/quicktime,video/webm" className="hidden" onChange={handleFileUpload} />
                </label>
              </div>
-             <p className="text-[8px] text-golf-beige/40">Max 20 MB (.mp4, .mov)</p>
+             <p className="text-[8px] text-golf-beige/40">Max 50 MB (.mp4, .mov)</p>
           </div>
         )}
       </Card>
