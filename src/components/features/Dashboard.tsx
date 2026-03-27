@@ -141,24 +141,52 @@ export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, 
           {rounds.length === 0 ? (
             <p className="text-golf-beige/40 italic py-2 text-center text-[9px]">No rounds logged yet.</p>
           ) : (
-            rounds.slice(0, 3).map(round => (
-              <div key={round.id} className="flex items-center justify-between p-1.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
-                <div>
-                  <div className="text-[10px] font-bold text-golf-beige leading-tight">{round.courseName || 'Unnamed Course'}</div>
-                  <div className="text-[8px] text-golf-beige/40">{round.date?.seconds ? new Date(round.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-center">
-                    <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Score</div>
-                    <div className="text-[10px] font-black text-golf-beige">{round.totalStrokes}</div>
+            rounds.slice(0, 3).map(round => {
+              const getWeatherEmoji = (code: number) => {
+                if (code === 0) return '☀️';
+                if (code >= 1 && code <= 3) return '⛅️';
+                if (code >= 45 && code <= 48) return '🌫';
+                if (code >= 51 && code <= 65) return '🌧';
+                if (code >= 71 && code <= 75) return '❄️';
+                if (code >= 80 && code <= 82) return '🌦';
+                if (code >= 95) return '⛈';
+                return '🏌️';
+              };
+
+              return (
+                <div key={round.id} className="flex items-center justify-between p-1.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
+                  <div>
+                    <div className="text-[10px] font-bold text-golf-beige leading-tight flex items-center gap-1.5">
+                      {round.courseName || 'Unnamed Course'}
+                      {round.weather && (
+                        <span className="text-[9px] bg-black/20 px-1 py-0.5 rounded-sm flex items-center gap-0.5" title={round.weather.condition}>
+                          {getWeatherEmoji(round.weather.iconCode)} {round.weather.temp}°
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[8px] text-golf-beige/40">{round.date?.seconds ? new Date(round.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Putts</div>
-                    <div className="text-[10px] font-bold text-golf-beige">{round.putts.reduce((a, b) => a + b, 0)}</div>
+                  <div className="flex items-center gap-2">
+                    {round.weather && round.weather.windSpeed > 0 && (
+                      <div className="text-center border-r border-white/10 pr-2">
+                        <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Vind</div>
+                        <div className="text-[9px] font-medium text-golf-beige flex items-center justify-center gap-0.5">
+                           💨 {round.weather.windSpeed}<span className="text-[6px]">km/h</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Score</div>
+                      <div className="text-[10px] font-black text-golf-beige">{round.totalStrokes}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Putts</div>
+                      <div className="text-[10px] font-bold text-golf-beige">{round.putts.reduce((a, b: number) => a + b, 0)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </Card>

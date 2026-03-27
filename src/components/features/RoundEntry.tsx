@@ -226,9 +226,41 @@ export const RoundEntry = ({ onComplete, profile }: { onComplete: () => void; pr
     }
   };
 
+  const getWeatherConditionString = (code: number) => {
+    if (code === 0) return 'Klart';
+    if (code >= 1 && code <= 3) return 'Molnigt';
+    if (code >= 45 && code <= 48) return 'Dimma';
+    if (code >= 51 && code <= 65) return 'Regn';
+    if (code >= 71 && code <= 75) return 'Snö';
+    if (code >= 80 && code <= 82) return 'Skurar';
+    if (code >= 95) return 'Åska';
+    return 'Okänt';
+  };
+
   const handleSubmit = async () => {
     if (!auth.currentUser) return;
     setIsSubmitting(true);
+    
+    let weatherData = null;
+    if (gpsEnabled && location.latitude && location.longitude) {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.current_weather) {
+            weatherData = {
+              temp: Math.round(data.current_weather.temperature),
+              windSpeed: Math.round(data.current_weather.windspeed),
+              condition: getWeatherConditionString(data.current_weather.weathercode),
+              iconCode: data.current_weather.weathercode
+            };
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch weather data", err);
+      }
+    }
+
     try {
       await addDoc(collection(db, 'rounds'), {
         uid: auth.currentUser.uid,
@@ -251,7 +283,8 @@ export const RoundEntry = ({ onComplete, profile }: { onComplete: () => void; pr
         par,
         greensInRegulation,
         shots: JSON.stringify(shots),
-        isExtrapolated
+        isExtrapolated,
+        weather: weatherData
       });
       onComplete();
     } catch (e) {

@@ -19,6 +19,13 @@ export interface Shot {
   lng?: number;
 }
 
+export interface WeatherData {
+  temp: number;
+  windSpeed: number;
+  condition: string; // e.g., 'sunny', 'cloudy', 'rainy'
+  iconCode: number;
+}
+
 export interface GolfRound {
   id?: string;
   uid: string;
@@ -42,6 +49,7 @@ export interface GolfRound {
   greensInRegulation: number;
   shots?: Shot[][] | string;
   isExtrapolated?: boolean;
+  weather?: WeatherData;
 }
 
 export interface Stats {
