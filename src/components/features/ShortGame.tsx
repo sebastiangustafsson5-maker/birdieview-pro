@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Trophy, Target, AlertCircle, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
+import { TrendChart } from '@/components/ui/TrendChart';
 import { Stats, UserProfile, GolfRound, ShortGameType } from '@/types';
 import { cn } from '@/components/ui/Card';
 
@@ -37,6 +38,25 @@ export const ShortGame = ({ stats, profile, selectedYear, onYearChange, rounds, 
   };
 
   const totalScrambleTarget = Math.max(15, 55 - hcp);
+
+  const filteredLocalRounds = selectedYear === 'all' ? rounds : rounds.filter(r => {
+    if (!r.date?.seconds) return false;
+    return new Date(r.date.seconds * 1000).getFullYear().toString() === selectedYear;
+  });
+
+  const trendData = [...filteredLocalRounds].sort((a, b) => a.date?.seconds - b.date?.seconds).map((r, i) => {
+    let attempts = 0, scrambles = 0;
+    r.shortGameTypes?.forEach((type, idx) => {
+      if (type !== 'none' && r.approachResults?.[idx] !== 'gir') {
+        attempts++;
+        if (r.scores?.[idx] <= r.holePars?.[idx]) scrambles++;
+      }
+    });
+    return {
+      name: `R ${i + 1}`,
+      scrambling: attempts > 0 ? (scrambles / attempts) * 100 : 0
+    };
+  });
 
   return (
     <div className="space-y-2">
@@ -142,6 +162,17 @@ export const ShortGame = ({ stats, profile, selectedYear, onYearChange, rounds, 
         <p className="text-[10px] text-golf-beige/80 leading-tight italic">
           "{getInsight()}"
         </p>
+      </Card>
+
+      <Card className="p-3 border-golf-beige/10 mt-3">
+        <h3 className="text-[10px] font-bold mb-1.5 text-golf-beige uppercase tracking-widest">Scrambling Trend</h3>
+        <TrendChart 
+          data={trendData} 
+          dataKey="scrambling" 
+          target={totalScrambleTarget} 
+          targetLabel="Mål"
+          valueFormatter={(val) => `${Math.round(val)}%`}
+        />
       </Card>
     </div>
   );

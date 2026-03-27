@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
+import { TrendChart } from '@/components/ui/TrendChart';
 import { Stats, UserProfile, GolfRound } from '@/types';
 import { cn } from '@/components/ui/Card';
 
@@ -37,6 +38,16 @@ export const Putting = ({ stats, profile, selectedYear, onYearChange, rounds, fi
     }
     return "Fortsätt träna på din längdkontroll för att hålla nere antalet puttar.";
   };
+
+  const filteredLocalRounds = selectedYear === 'all' ? rounds : rounds.filter(r => {
+    if (!r.date?.seconds) return false;
+    return new Date(r.date.seconds * 1000).getFullYear().toString() === selectedYear;
+  });
+
+  const trendData = [...filteredLocalRounds].sort((a, b) => a.date?.seconds - b.date?.seconds).map((r, i) => ({
+    name: `R ${i + 1}`,
+    putts: r.putts?.reduce((a, b) => a + b, 0) || 0
+  }));
 
   return (
     <div className="space-y-2">
@@ -81,6 +92,17 @@ export const Putting = ({ stats, profile, selectedYear, onYearChange, rounds, fi
         <p className="text-[10px] text-golf-beige/80 leading-tight italic">
           "{getInsight()}"
         </p>
+      </Card>
+
+      <Card className="p-3 border-golf-beige/10 mt-3">
+        <h3 className="text-[10px] font-bold mb-1.5 text-golf-beige uppercase tracking-widest">Puttar per Runda Trend</h3>
+        <TrendChart 
+          data={trendData} 
+          dataKey="putts" 
+          target={targets.puttsPerRound} 
+          targetLabel="Mål"
+          valueFormatter={(val) => `${Math.round(val)}`}
+        />
       </Card>
     </div>
   );

@@ -4,6 +4,7 @@ import React from 'react';
 import { Trophy, Target, AlertCircle, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
+import { TrendChart } from '@/components/ui/TrendChart';
 import { GolfRound, UserProfile, Stats } from '@/types';
 
 export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, filteredRoundsCount }: { rounds: GolfRound[]; profile: UserProfile | null; stats: Stats; selectedYear: string; onYearChange: (year: string) => void; filteredRoundsCount: number }) => {
@@ -20,6 +21,16 @@ export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, 
 
   const shameMeterValue = Math.min(100, Math.max(0, (stats.avgStrokes - targets.scoring) * 5 + 50));
   const shameLevel = shameMeterValue > 80 ? "KATASTROF" : shameMeterValue > 60 ? "DÅLIGT" : shameMeterValue > 40 ? "OK" : "PROFFS";
+
+  const filteredLocalRounds = selectedYear === 'all' ? rounds : rounds.filter(r => {
+    if (!r.date?.seconds) return false;
+    return new Date(r.date.seconds * 1000).getFullYear().toString() === selectedYear;
+  });
+
+  const trendData = [...filteredLocalRounds].sort((a, b) => a.date?.seconds - b.date?.seconds).map((r, i) => ({
+    name: `R ${i + 1}`,
+    score: r.totalStrokes
+  }));
 
   return (
     <div className="space-y-2">
@@ -189,6 +200,17 @@ export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, 
             })
           )}
         </div>
+      </Card>
+
+      <Card className="p-3 border-golf-beige/10">
+        <h3 className="text-[10px] font-bold mb-1.5 text-golf-beige uppercase tracking-widest">Scoring Trend</h3>
+        <TrendChart 
+          data={trendData} 
+          dataKey="score" 
+          target={targets.scoring} 
+          targetLabel="Mål"
+          valueFormatter={(val) => `${Math.round(val)}`}
+        />
       </Card>
     </div>
   );

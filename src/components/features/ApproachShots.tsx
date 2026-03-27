@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
+import { TrendChart } from '@/components/ui/TrendChart';
 import { Stats, UserProfile, GolfRound } from '@/types';
 
 export const ApproachShots = ({ stats, profile, selectedYear, onYearChange, rounds, filteredRoundsCount }: { stats: Stats; profile: UserProfile | null; selectedYear: string; onYearChange: (year: string) => void; rounds: GolfRound[]; filteredRoundsCount: number }) => {
@@ -35,6 +36,26 @@ export const ApproachShots = ({ stats, profile, selectedYear, onYearChange, roun
     }
     return "Fokusera på en ren bollträff för att öka din GIR %.";
   };
+
+  const filteredLocalRounds = selectedYear === 'all' ? rounds : rounds.filter(r => {
+    if (!r.date?.seconds) return false;
+    return new Date(r.date.seconds * 1000).getFullYear().toString() === selectedYear;
+  });
+
+  const trendData = [...filteredLocalRounds].sort((a, b) => a.date?.seconds - b.date?.seconds).map((r, i) => {
+    const holes = r.scores?.length || 0;
+    let girHits = 0;
+    if (r.shots) {
+      const roundShots: any[][] = typeof r.shots === 'string' ? JSON.parse(r.shots) : r.shots;
+      roundShots.forEach(hs => {
+        if (hs && hs.some(s => s.result === 'Green-träff (GIR)')) girHits++;
+      });
+    }
+    return {
+      name: `R ${i + 1}`,
+      gir: holes > 0 ? (girHits / holes) * 100 : 0
+    };
+  });
 
   return (
     <div className="space-y-2">
@@ -168,6 +189,17 @@ export const ApproachShots = ({ stats, profile, selectedYear, onYearChange, roun
           </div>
         </Card>
       </div>
+
+      <Card className="p-3 border-golf-beige/10 mt-3">
+        <h3 className="text-[10px] font-bold mb-1.5 text-golf-beige uppercase tracking-widest">GIR Trend</h3>
+        <TrendChart 
+          data={trendData} 
+          dataKey="gir" 
+          target={girTarget} 
+          targetLabel="Mål"
+          valueFormatter={(val) => `${Math.round(val)}%`}
+        />
+      </Card>
     </div>
   );
 };

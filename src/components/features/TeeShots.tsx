@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
+import { TrendChart } from '@/components/ui/TrendChart';
 import { Stats, UserProfile, GolfRound } from '@/types';
 
 export const TeeShots = ({ stats, profile, selectedYear, onYearChange, rounds, filteredRoundsCount }: { stats: Stats; profile: UserProfile | null; selectedYear: string; onYearChange: (year: string) => void; rounds: GolfRound[]; filteredRoundsCount: number }) => {
@@ -27,6 +28,20 @@ export const TeeShots = ({ stats, profile, selectedYear, onYearChange, rounds, f
     }
     return "Välj rätt klubba för att maximera chansen till fairway-träff.";
   };
+
+  const filteredLocalRounds = selectedYear === 'all' ? rounds : rounds.filter(r => {
+    if (!r.date?.seconds) return false;
+    return new Date(r.date.seconds * 1000).getFullYear().toString() === selectedYear;
+  });
+
+  const trendData = [...filteredLocalRounds].sort((a, b) => a.date?.seconds - b.date?.seconds).map((r, i) => {
+    const fwAttempts = r.fairwayHits?.length || 0;
+    const fwHits = r.fairwayHits?.filter(h => h === 'center').length || 0;
+    return {
+      name: `R ${i + 1}`,
+      fir: fwAttempts > 0 ? (fwHits / fwAttempts) * 100 : 0
+    };
+  });
 
   return (
     <div className="space-y-2">
@@ -142,6 +157,17 @@ export const TeeShots = ({ stats, profile, selectedYear, onYearChange, rounds, f
           </div>
         </Card>
       </div>
+
+      <Card className="p-3 border-golf-beige/10">
+        <h3 className="text-[10px] font-bold mb-1.5 text-golf-beige uppercase tracking-widest">Fairway Trend</h3>
+        <TrendChart 
+          data={trendData} 
+          dataKey="fir" 
+          target={firTarget} 
+          targetLabel="Mål"
+          valueFormatter={(val) => `${Math.round(val)}%`}
+        />
+      </Card>
     </div>
   );
 };
