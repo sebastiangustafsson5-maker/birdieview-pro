@@ -200,7 +200,7 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
                   Analys ({swing.club || 'Okänd klubba'}) från {swing.date?.seconds ? new Date(swing.date.seconds * 1000).toLocaleDateString() : 'Okänt datum'}
                 </div>
                 <div className="text-xs text-golf-beige/90 leading-relaxed whitespace-pre-wrap font-medium">
-                  {swing.analysis.replace(/\*/g, '') /* Simple cleanup of markdown bolding if we don't use a library */}
+                  {swing.analysis ? swing.analysis.replace(/\*/g, '') : 'Ingen analys kunde genereras för denna sving.'}
                 </div>
               </div>
             </Card>
