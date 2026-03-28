@@ -1,13 +1,15 @@
 "use client";
 
-import React from 'react';
-import { Trophy, Target, AlertCircle, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trophy, Target, AlertCircle, TrendingUp, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { cn } from '@/components/ui/Card';
 import { YearFilter } from '@/components/ui/Filters';
 import { TrendChart } from '@/components/ui/TrendChart';
 import { GolfRound, UserProfile, Stats } from '@/types';
 
-export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, filteredRoundsCount }: { rounds: GolfRound[]; profile: UserProfile | null; stats: Stats; selectedYear: string; onYearChange: (year: string) => void; filteredRoundsCount: number }) => {
+export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, filteredRoundsCount, onDeleteRound }: { rounds: GolfRound[]; profile: UserProfile | null; stats: Stats; selectedYear: string; onYearChange: (year: string) => void; filteredRoundsCount: number; onDeleteRound?: (roundId: string) => void }) => {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const hcp = profile?.handicap || 20;
   
   // Dynamic targets based on exact HCP
@@ -152,7 +154,7 @@ export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, 
           {rounds.length === 0 ? (
             <p className="text-golf-beige/40 italic py-2 text-center text-[9px]">No rounds logged yet.</p>
           ) : (
-            rounds.slice(0, 3).map(round => {
+            rounds.slice(0, 5).map(round => {
               const getWeatherEmoji = (code: number) => {
                 if (code === 0) return '☀️';
                 if (code >= 1 && code <= 3) return '⛅️';
@@ -164,37 +166,72 @@ export const Dashboard = ({ rounds, profile, stats, selectedYear, onYearChange, 
                 return '🏌️';
               };
 
+              const isConfirming = confirmDeleteId === round.id;
+
               return (
-                <div key={round.id} className="flex items-center justify-between p-1.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
-                  <div>
-                    <div className="text-[10px] font-bold text-golf-beige leading-tight flex items-center gap-1.5">
-                      {round.courseName || 'Unnamed Course'}
-                      {round.weather && (
-                        <span className="text-[9px] bg-black/20 px-1 py-0.5 rounded-sm flex items-center gap-0.5" title={round.weather.condition}>
-                          {getWeatherEmoji(round.weather.iconCode)} {round.weather.temp}°
-                        </span>
+                <div key={round.id} className="relative">
+                  <div className="flex items-center justify-between p-1.5 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-golf-beige leading-tight flex items-center gap-1.5">
+                        {round.courseName || 'Unnamed Course'}
+                        {round.weather && (
+                          <span className="text-[9px] bg-black/20 px-1 py-0.5 rounded-sm flex items-center gap-0.5" title={round.weather.condition}>
+                            {getWeatherEmoji(round.weather.iconCode)} {round.weather.temp}°
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[8px] text-golf-beige/40">{round.date?.seconds ? new Date(round.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {round.weather && round.weather.windSpeed > 0 && (
+                        <div className="text-center border-r border-white/10 pr-2">
+                          <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Vind</div>
+                          <div className="text-[9px] font-medium text-golf-beige flex items-center justify-center gap-0.5">
+                             💨 {round.weather.windSpeed}<span className="text-[6px]">km/h</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-center">
+                        <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Score</div>
+                        <div className="text-[10px] font-black text-golf-beige">{round.totalStrokes}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Putts</div>
+                        <div className="text-[10px] font-bold text-golf-beige">{round.putts.reduce((a, b: number) => a + b, 0)}</div>
+                      </div>
+                      {onDeleteRound && round.id && (
+                        <button
+                          onClick={() => setConfirmDeleteId(round.id!)}
+                          className="ml-1 p-1 rounded-md text-golf-beige/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          title="Ta bort runda"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       )}
                     </div>
-                    <div className="text-[8px] text-golf-beige/40">{round.date?.seconds ? new Date(round.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {round.weather && round.weather.windSpeed > 0 && (
-                      <div className="text-center border-r border-white/10 pr-2">
-                        <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Vind</div>
-                        <div className="text-[9px] font-medium text-golf-beige flex items-center justify-center gap-0.5">
-                           💨 {round.weather.windSpeed}<span className="text-[6px]">km/h</span>
-                        </div>
+                  {isConfirming && (
+                    <div className="absolute inset-0 bg-red-900/90 backdrop-blur-sm rounded-lg flex items-center justify-between px-3 z-10">
+                      <span className="text-[9px] font-bold text-white">Ta bort denna runda?</span>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="px-2 py-1 text-[8px] font-bold text-white/70 bg-white/10 rounded-md hover:bg-white/20 transition-all"
+                        >
+                          Avbryt
+                        </button>
+                        <button
+                          onClick={() => {
+                            onDeleteRound?.(round.id!);
+                            setConfirmDeleteId(null);
+                          }}
+                          className="px-2 py-1 text-[8px] font-bold text-white bg-red-500 rounded-md hover:bg-red-600 transition-all"
+                        >
+                          Ta bort
+                        </button>
                       </div>
-                    )}
-                    <div className="text-center">
-                      <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Score</div>
-                      <div className="text-[10px] font-black text-golf-beige">{round.totalStrokes}</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-[6px] uppercase text-golf-beige/60 font-bold">Putts</div>
-                      <div className="text-[10px] font-bold text-golf-beige">{round.putts.reduce((a, b: number) => a + b, 0)}</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             })

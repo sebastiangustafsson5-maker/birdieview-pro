@@ -16,7 +16,7 @@ import {
   Video
 } from 'lucide-react';
 
-import { auth, db, doc, getDoc, collection, query, where, orderBy, onSnapshot, updateDoc } from '@/lib/firebase';
+import { auth, db, doc, getDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, updateDoc } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { cn } from '@/components/ui/Card';
 import { UserProfile, GolfRound, Stats, Shot } from '@/types';
@@ -346,6 +346,15 @@ export default function App() {
     }
   }, [rounds, user]);
 
+  const handleDeleteRound = async (roundId: string) => {
+    try {
+      await deleteDoc(doc(db, 'rounds', roundId));
+    } catch (e: any) {
+      console.error('Failed to delete round:', e);
+      alert(`Kunde inte ta bort rundan:\n${e.message}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-golf-dark">
@@ -446,7 +455,7 @@ export default function App() {
           </div>
         )}
         <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><Dashboard rounds={rounds} profile={profile} stats={stats} selectedYear={selectedYear} onYearChange={setSelectedYear} filteredRoundsCount={filteredRounds.length} /></motion.div>}
+          {activeTab === 'dashboard' && <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><Dashboard rounds={rounds} profile={profile} stats={stats} selectedYear={selectedYear} onYearChange={setSelectedYear} filteredRoundsCount={filteredRounds.length} onDeleteRound={handleDeleteRound} /></motion.div>}
           {activeTab === 'tee' && <motion.div key="tee" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><TeeShots stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
           {activeTab === 'approach' && <motion.div key="approach" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><ApproachShots stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
           {activeTab === 'short' && <motion.div key="short" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><ShortGame stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
