@@ -18,11 +18,20 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
     if (!auth.currentUser) return;
     const q = query(
       collection(db, 'swings'), 
-      where('uid', '==', auth.currentUser.uid), 
-      orderBy('date', 'desc')
+      where('uid', '==', auth.currentUser.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSwings(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as SwingAnalysis));
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as SwingAnalysis);
+      // Client-side sorting bypasses Firestore's need for a composite index
+      docs.sort((a, b) => {
+        const timeA = a.date?.toMillis ? a.date.toMillis() : (a.date?.seconds || 0) * 1000;
+        const timeB = b.date?.toMillis ? b.date.toMillis() : (b.date?.seconds || 0) * 1000;
+        return timeB - timeA;
+      });
+      setSwings(docs);
+    }, (error) => {
+      console.error("Firestore onSnapshot error:", error);
+      alert("Databasfel när analyser skulle hämtas: " + error.message);
     });
     return unsubscribe;
   }, []);
