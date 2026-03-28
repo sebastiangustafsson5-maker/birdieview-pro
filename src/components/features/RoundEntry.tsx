@@ -42,6 +42,7 @@ const CLUBS = [
 
 export const RoundEntry = ({ onComplete, profile }: { onComplete: () => void; profile: UserProfile | null }) => {
   const [step, setStep] = useState(1);
+  const [error, setError] = useState<string | null>(null);
   const [courseName, setCourseName] = useState('');
   const [totalStrokes, setTotalStrokes] = useState<string>('72');
   const [par, setPar] = useState(72);
@@ -262,7 +263,9 @@ export const RoundEntry = ({ onComplete, profile }: { onComplete: () => void; pr
     }
 
     try {
-      await addDoc(collection(db, 'rounds'), {
+      setError(null);
+      
+      const roundData: any = {
         uid: auth.currentUser.uid,
         date: new Date(),
         courseName,
@@ -283,12 +286,19 @@ export const RoundEntry = ({ onComplete, profile }: { onComplete: () => void; pr
         par,
         greensInRegulation,
         shots: JSON.stringify(shots),
-        isExtrapolated,
-        weather: weatherData
-      });
+        isExtrapolated
+      };
+      
+      if (weatherData) {
+        roundData.weather = weatherData;
+      }
+      
+      await addDoc(collection(db, 'rounds'), roundData);
       onComplete();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Error saving round:", e);
+      setError(e.message || "Ett okänt fel inträffade när rundan skulle sparas.");
+      alert(`Kunde inte spara rundan:\n${e.message || "Okänt fel"}`);
     } finally {
       setIsSubmitting(false);
     }

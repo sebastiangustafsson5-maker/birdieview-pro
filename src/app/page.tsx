@@ -39,6 +39,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'entry' | 'profile' | 'tee' | 'approach' | 'short' | 'putt' | 'swing'>('dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState('all');
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const filteredRounds = useMemo(() => {
     if (selectedYear === 'all') return rounds;
@@ -291,6 +292,10 @@ export default function App() {
         return { id: doc.id, ...data, shots: parsedShots } as GolfRound;
       });
       setRounds(roundsData);
+      setFetchError(null);
+    }, (error) => {
+      console.error("Error fetching rounds:", error);
+      setFetchError(error.message);
     });
     return unsubscribe;
   }, [user]);
@@ -433,6 +438,13 @@ export default function App() {
       </div>
 
       <main className="max-w-5xl mx-auto p-4 md:p-8">
+        {fetchError && (
+          <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-6 shadow-lg">
+            <h3 className="text-red-400 font-bold mb-1">Fel vid hämtning av statistik</h3>
+            <p className="text-red-200/80 text-xs break-all selectable">{fetchError}</p>
+            <p className="text-red-200/60 text-[10px] mt-2">Om det står att ett index saknas (requires an index), kopiera länken ovan och klistra in i din webbläsare för att skapa det i Firebase.</p>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {activeTab === 'dashboard' && <motion.div key="dashboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><Dashboard rounds={rounds} profile={profile} stats={stats} selectedYear={selectedYear} onYearChange={setSelectedYear} filteredRoundsCount={filteredRounds.length} /></motion.div>}
           {activeTab === 'tee' && <motion.div key="tee" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}><TeeShots stats={stats} profile={profile} selectedYear={selectedYear} onYearChange={setSelectedYear} rounds={rounds} filteredRoundsCount={filteredRounds.length} /></motion.div>}
