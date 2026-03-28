@@ -28,8 +28,15 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
   }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !auth.currentUser) return;
+    if (!e.target.files || e.target.files.length === 0) return;
+    if (!auth.currentUser) {
+      alert("Fel: Du verkar inte vara inloggad. Ladda om sidan och försök igen.");
+      return;
+    }
     const file = e.target.files[0];
+    
+    // Omedelbart nollställ inputen så att man kan välja samma fil flera gånger
+    e.target.value = '';
     
     if (file.size > 50 * 1024 * 1024) {
       alert("Filen är för stor. Max 50 MB tillåts just nu.");
@@ -40,7 +47,8 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
     setProgress(0);
 
     try {
-      const fileId = crypto.randomUUID();
+      // Byter ut crypto.randomUUID() mot en tidsstämpel+random sträng eftersom det ibland krashar på mobiler över HTTP
+      const fileId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const storageRef = ref(storage, `swings/${auth.currentUser.uid}/${fileId}-${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -51,17 +59,24 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
         }, 
         (error) => {
           console.error("Upload error", error);
-          alert("Kunde inte ladda upp filen. Har du rättigheter i Firebase Storage?");
+          alert("Kunde inte ladda upp filen (State Changed Error). Har du rättigheter i Firebase Storage? " + error.message);
           setIsUploading(false);
         }, 
         async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setIsUploading(false);
-          analyzeSwing(downloadURL);
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            setIsUploading(false);
+            analyzeSwing(downloadURL);
+          } catch(err: any) {
+            console.error("Fel vid getDownloadURL", err);
+            alert("Något gick fel när vi skulle hämta fillänken: " + err.message);
+            setIsUploading(false);
+          }
         }
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert("Ett oväntat fel uppstod precis innan uppladdningen startade: " + err.message);
       setIsUploading(false);
     }
   };

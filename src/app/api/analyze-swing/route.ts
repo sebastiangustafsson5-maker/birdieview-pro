@@ -62,12 +62,7 @@ Ge mig 3 konkreta, hands-on tekniktips för att reparera dessa exakta problem. H
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
-        {
-          fileData: {
-            fileUri: uploadResult.uri,
-            mimeType: uploadResult.mimeType || 'video/mp4'
-          }
-        },
+        uploadResult,
         prompt
       ]
     });
