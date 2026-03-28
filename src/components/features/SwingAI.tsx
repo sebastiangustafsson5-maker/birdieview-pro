@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Video, UploadCloud, RefreshCw } from 'lucide-react';
-import { auth, db, storage, collection, addDoc, query, where, orderBy, onSnapshot } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Video, UploadCloud, RefreshCw, Trash2 } from 'lucide-react';
+import { auth, db, storage, doc, deleteDoc, collection, addDoc, query, where, onSnapshot } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Card } from '@/components/ui/Card';
 import { Stats, SwingAnalysis } from '@/types';
 
@@ -118,6 +118,22 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
     }
   };
 
+  const handleDelete = async (swing: SwingAnalysis) => {
+    if (!window.confirm("Är du säker på att du vill ta bort analysen och videon?")) return;
+    try {
+      if (swing.id) {
+        await deleteDoc(doc(db, 'swings', swing.id));
+      }
+      if (swing.videoUrl) {
+        const fileRef = ref(storage, swing.videoUrl);
+        await deleteObject(fileRef);
+      }
+    } catch (err: any) {
+      console.error("Kunde inte ta bort:", err);
+      alert("Fel vid borttagning: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <header className="px-1">
@@ -191,7 +207,14 @@ export const SwingAI = ({ stats }: { stats: Stats }) => {
           </Card>
         ) : (
           swings.map(swing => (
-            <Card key={swing.id} className="overflow-hidden border-white/5 bg-black/20 shadow-lg">
+            <Card key={swing.id} className="overflow-hidden border-white/5 bg-black/20 shadow-lg relative">
+              <button 
+                onClick={() => handleDelete(swing)} 
+                className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-red-500/80 text-white/50 hover:text-white rounded-full transition-all z-10"
+                title="Ta bort analys"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
               <div className="aspect-video bg-black relative border-b border-white/5">
                 <video src={swing.videoUrl} controls className="w-full h-full object-contain" />
               </div>

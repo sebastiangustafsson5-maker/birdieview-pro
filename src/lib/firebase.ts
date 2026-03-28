@@ -24,4 +24,4 @@ const provider = new GoogleAuthProvider();
 export const signInWithGoogle = () => signInWithPopup(auth, provider);
 export const logout = () => signOut(auth);
 
-export { doc, getDoc, setDoc, collection, addDoc, updateDoc, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+export { doc, getDoc, setDoc, deleteDoc, collection, addDoc, updateDoc, query, where, orderBy, onSnapshot } from 'firebase/firestore';
